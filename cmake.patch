@@ -1,0 +1,13 @@
+diff --git a/buildlib/RDMA_BuildType.cmake b/buildlib/RDMA_BuildType.cmake
+index 17206f5..8c738e4 100644
+--- a/buildlib/RDMA_BuildType.cmake
++++ b/buildlib/RDMA_BuildType.cmake
+@@ -29,7 +29,7 @@ function(RDMA_BuildType)
+   # with the -DNDEBUG removed
+   foreach (language CXX C)
+     set(VAR_TO_MODIFY "CMAKE_${language}_FLAGS_RELWITHDEBINFO")
+-    if (${${VAR_TO_MODIFY}} STREQUAL ${${VAR_TO_MODIFY}_INIT})
++    if ("${${VAR_TO_MODIFY}}" STREQUAL "${${VAR_TO_MODIFY}_INIT}")
+ 	string(REGEX REPLACE "(^| )[/-]D *NDEBUG($| )"
+ 	  " "
+ 	  replacement
