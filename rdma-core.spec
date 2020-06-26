@@ -40,6 +40,7 @@ BuildRequires: ninja
 BuildRequires: pkgconfig(libudev)
 BuildRequires: pkgconfig(libnl-3.0)
 BuildRequires: pkgconfig(libnl-route-3.0)
+BuildRequires: pkgconfig(systemd)
 BuildRequires: perl-generators
 %if %{with docs}
 BuildRequires: pandoc
