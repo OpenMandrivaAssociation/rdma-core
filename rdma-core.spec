@@ -4,6 +4,9 @@
 %define ibverbsmajor 1
 %define ibumadmajor 3
 %define rdmacmmajor 1
+%define efamajor 1
+%define mlx4major 1
+%define mlx5major 1
 
 %global dracutlibdir %{_prefix}/lib/dracut
 %global sysmodprobedir %{_prefix}/lib/modprobe.d
@@ -13,43 +16,44 @@
 %define libibmad %mklibname ibumad %{ibmadmajor}
 %define librdmacm %mklibname rdmacm %{rdmacmmajor}
 %define libibnetdisc %mklibname ibnetdisc %{ibnetdiscmajor}
+%define libefa %mklibname efa %{efamajor}
+%define libmlx4 %mklibname mlx4 %{efamajor}
+%define libmlx5 %mklibname mlx5 %{efamajor}
 
 %define devname %mklibname %{name} -d
 
 %bcond_with docs
 
-Name: rdma-core
-Version: 30.0
-Release: 1
-Summary: RDMA core userspace libraries and daemons
-Group: System/Servers
+Name:		rdma-core
+Version:	32.0
+Release:	1
+Summary:	RDMA core userspace libraries and daemons
+Group:		System/Servers
 
 # Almost everything is licensed under the OFA dual GPLv2, 2 Clause BSD license
 #  providers/ipathverbs/ Dual licensed using a BSD license with an extra patent clause
 #  providers/rxe/ Incorporates code from ipathverbs and contains the patent clause
 #  providers/hfi1verbs Uses the 3 Clause BSD license
-License: GPLv2 or BSD
-Url: https://github.com/linux-rdma/rdma-core
-Source0: https://github.com/linux-rdma/rdma-core/releases/download/v%{version}/rdma-core-%{version}.tar.gz
-Patch0:	cmake.patch
-# 32-bit arm is missing required arch-specific memory barriers
-ExcludeArch: %{arm}
+License:	GPLv2 or BSD
+Url:		https://github.com/linux-rdma/rdma-core
+Source0:	https://github.com/linux-rdma/rdma-core/releases/download/v%{version}/rdma-core-%{version}.tar.gz
+Patch0:		cmake.patch
 
-BuildRequires: cmake >= 2.8.11
-BuildRequires: ninja
-BuildRequires: pkgconfig(libudev)
-BuildRequires: pkgconfig(libnl-3.0)
-BuildRequires: pkgconfig(libnl-route-3.0)
-BuildRequires: pkgconfig(systemd)
-BuildRequires: perl-generators
+BuildRequires:	cmake >= 2.8.11
+BuildRequires:	ninja
+BuildRequires:	pkgconfig(libudev)
+BuildRequires:	pkgconfig(libnl-3.0)
+BuildRequires:	pkgconfig(libnl-route-3.0)
+BuildRequires:	python-docutils
+BuildRequires:	perl-generators
 %if %{with docs}
-BuildRequires: pandoc
+BuildRequires:	pandoc
 %endif
 
-Provides: rdma = %{EVRD}
-Provides: rdma-ndd = %{EVRD}
+Provides:	rdma = %{EVRD}
+Provides:	rdma-ndd = %{EVRD}
 # the ndd utility moved from infiniband-diags to rdma-core
-Conflicts: infiniband-diags <= 1.6.7
+Conflicts:	infiniband-diags <= 1.6.7
 
 
 %description
@@ -74,12 +78,10 @@ scripts, dracut rules, and the rdma-ndd utility.
 %config(noreplace) %{_sysconfdir}/rdma/modules/rdma.conf
 %config(noreplace) %{_sysconfdir}/rdma/modules/roce.conf
 %config(noreplace) %{_sysconfdir}/rdma/rdma.conf
-%config(noreplace) %{_sysconfdir}/rdma/sriov-vfs
 %config(noreplace) %{_sysconfdir}/udev/rules.d/*
 %config(noreplace) %{_sysconfdir}/modprobe.d/truescale.conf
 %{_unitdir}/rdma-hw.target
 %{_unitdir}/rdma-load-modules@.service
-%{_unitdir}/rdma.service
 %dir %{dracutlibdir}/modules.d/05rdma
 %{dracutlibdir}/modules.d/05rdma/module-setup.sh
 %{_udevrulesdir}/60-rdma-persistent-naming.rules
@@ -89,10 +91,6 @@ scripts, dracut rules, and the rdma-ndd utility.
 %{_udevrulesdir}/90-rdma-hw-modules.rules
 %{_udevrulesdir}/90-rdma-ulp-modules.rules
 %{_udevrulesdir}/90-rdma-umad.rules
-%{_udevrulesdir}/98-rdma.rules
-%{sysmodprobedir}/libmlx4.conf
-%{_libexecdir}/rdma-init-kernel
-%{_libexecdir}/rdma-set-sriov-vf
 %{_libexecdir}/truescale-serdes.cmds
 %{_sbindir}/rdma-ndd
 %{_unitdir}/rdma-ndd.service
@@ -100,16 +98,22 @@ scripts, dracut rules, and the rdma-ndd utility.
 %{_mandir}/man8/rdma-ndd.*
 %license COPYING.*
 
-#===================================================================
+#--------------------------------------------------------------------------
+
 %package -n 	%{devname}
 Summary:	RDMA core development libraries and headers
+Group:		System/Servers
 Requires:	%{name} = %{EVRD}
 Requires:	%{libibverbs} = %{EVRD}
 Requires:	%{libibumad} = %{EVRD}
 Requires:	%{librdmacm} = %{EVRD}
 Requires:	%{libibnetdisc} = %{EVRD}
+Requires:	%{libefa} = %{EVRD}
+Requires:	%{libmlx4} = %{EVRD}
+Requires:	%{libmlx5} = %{EVRD}
 Requires:	ibacm = %{EVRD}
 Provides:	ibacm-devel = %{EVRD}
+Provides:	rdmacm-devel = %{EVRD}
 Requires:	infiniband-diags = %{EVRD}
 Provides:	infiniband-diags-devel = %{EVRD}
 Provides:	%{_lib}ibmad-devel = %{EVRD}
@@ -119,6 +123,8 @@ RDMA core development libraries and headers.
 
 %files -n %{devname}
 %doc %{_docdir}/%{name}-%{version}/MAINTAINERS
+%doc %{_docdir}/%{name}-%{version}/libibverbs.md
+%doc %{_docdir}/%{name}-%{version}/librdmacm.md
 %dir %{_includedir}/infiniband
 %dir %{_includedir}/rdma
 %{_includedir}/infiniband/*
@@ -137,15 +143,15 @@ RDMA core development libraries and headers.
 %{_mandir}/man7/mlx4dv*
 %{_mandir}/man3/mlx5dv*
 %{_mandir}/man7/mlx5dv*
-%{_mandir}/man3/mlx4dv*
-%{_mandir}/man7/mlx4dv*
 
-#===================================================================
+#--------------------------------------------------------------------------
+
 %package -n infiniband-diags
-Summary: InfiniBand Diagnostic Tools
-Provides: perl(IBswcountlimits)
-Requires: %{libibmad} = %{EVRD}
-Requires: %{libibnetdisc} = %{EVRD}
+Summary:	InfiniBand Diagnostic Tools
+Group:		System/Servers
+Provides:	perl(IBswcountlimits)
+Requires:	%{libibmad} = %{EVRD}
+Requires:	%{libibnetdisc} = %{EVRD}
 
 %description -n infiniband-diags
 This package provides IB diagnostic programs and scripts needed to diagnose an
@@ -223,10 +229,11 @@ programs. These include MAD, SA, SMP, and other basic IB functions.
 %config(noreplace) %{_sysconfdir}/infiniband-diags/error_thresholds
 %config(noreplace) %{_sysconfdir}/infiniband-diags/ibdiag.conf
 
-#====================================================================
+#--------------------------------------------------------------------------
+
 %package -n %{libibmad}
 Summary: OpenFabrics Alliance InfiniBand mad (userspace management datagram) library
-Requires: %{name} = %{EVRD}
+Group:		System/Libraries
 
 %description -n %{libibmad}
 libibmad provides the userspace management datagram (umad) library
@@ -236,8 +243,7 @@ are used by the IB diagnostic and management tools, including OpenSM.
 %files -n %{libibmad}
 %{_libdir}/libibmad*.so.%{ibmadmajor}*
 
-#===================================================================
-
+#--------------------------------------------------------------------------
 %package -n infiniband-diags-compat
 Summary: OpenFabrics Alliance InfiniBand Diagnostic Tools
 
@@ -283,9 +289,45 @@ compatibility reasons.
 %{_mandir}/man8/ibprintrt*
 %{_sbindir}/set_nodedesc.sh
 
-#======================================================================
+#--------------------------------------------------------------------------
+
 %package -n	%{libibverbs}
 Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
+Group:		System/Libraries
+
+%description -n %{libibverbs}
+libibverbs is a library that allows userspace processes to use RDMA
+"verbs" as described in the InfiniBand Architecture Specification and
+the RDMA Protocol Verbs Specification.  This includes direct hardware
+access from userspace to InfiniBand/iWARP adapters (kernel bypass) for
+fast path operations.
+
+%files -n %{libibverbs}
+%{_libdir}/libibverbs*.so.%{ibverbsmajor}*
+
+#--------------------------------------------------------------------------
+
+%package -n libibverbs-utils
+Summary:	Examples for the libibverbs library
+Group:		System/Servers
+Requires:	%{libibverbs} = %{EVRD}
+
+%description -n libibverbs-utils
+Useful libibverbs example programs such as ibv_devinfo, which
+displays information about RDMA devices.
+
+%files -n libibverbs-utils
+%{_bindir}/ibv_*
+%{_mandir}/man1/ibv_*
+%dir %{_sysconfdir}/libibverbs.d
+%config(noreplace) %{_sysconfdir}/libibverbs.d/*.driver
+
+
+#--------------------------------------------------------------------------
+
+%package -n	libibverbs-plugins
+Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
+Group:		System/Libraries
 Provides:	%{_lib}cxgb3 = %{EVRD}
 Provides:	%{_lib}cxgb4 = %{EVRD}
 Provides:	%{_lib}hfi1 = %{EVRD}
@@ -298,7 +340,7 @@ Provides:	%{_lib}ocrdma = %{EVRD}
 Provides:	%{_lib}rxe = %{EVRD}
 Provides:	%{_lib}usnic_verbs = %{EVRD}
 
-%description -n %{libibverbs}
+%description -n libibverbs-plugins
 libibverbs is a library that allows userspace processes to use RDMA
 "verbs" as described in the InfiniBand Architecture Specification and
 the RDMA Protocol Verbs Specification.  This includes direct hardware
@@ -322,36 +364,63 @@ Device-specific plug-in ibverbs userspace drivers are included:
 - librxe: A software implementation of the RoCE protocol
 - libvmw_pvrdma: VMware paravirtual RDMA device
 
-%files -n %{libibverbs}
-%dir %{_sysconfdir}/libibverbs.d
+%files -n libibverbs-plugins
 %dir %{_libdir}/libibverbs
-%{_libdir}/libefa.so.*
-%{_libdir}/libibverbs*.so.%{ibverbsmajor}*
 %{_libdir}/libibverbs/*.so
-%{_libdir}/libmlx5.so.*
-%{_libdir}/libmlx4.so.*
-%config(noreplace) %{_sysconfdir}/libibverbs.d/*.driver
-%doc %{_docdir}/%{name}-%{version}/libibverbs.md
 
-#===================================================================
+#--------------------------------------------------------------------------
 
-%package -n libibverbs-utils
-Summary: Examples for the libibverbs library
-#Requires: %{libibverbs} = %{EVRD}
+%package -n	%{libefa}
+Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
+Group:		System/Libraries
 
-%description -n libibverbs-utils
-Useful libibverbs example programs such as ibv_devinfo, which
-displays information about RDMA devices.
+%description -n %{libefa}
+libibverbs is a library that allows userspace processes to use RDMA
+"verbs" as described in the InfiniBand Architecture Specification and
+the RDMA Protocol Verbs Specification.  This includes direct hardware
+access from userspace to InfiniBand/iWARP adapters (kernel bypass) for
+fast path operations.
 
-%files -n libibverbs-utils
-%{_bindir}/ibv_*
-%{_mandir}/man1/ibv_*
 
-#===================================================================
+%files -n %{libefa}
+%{_libdir}/libefa.so.%{efamajor}*
 
+#--------------------------------------------------------------------------
+
+%package -n	%{libmlx4}
+Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
+Group:		System/Libraries
+
+%description -n %{libmlx4}
+libibverbs is a library that allows userspace processes to use RDMA
+"verbs" as described in the InfiniBand Architecture Specification and
+the RDMA Protocol Verbs Specification.  This includes direct hardware
+access from userspace to InfiniBand/iWARP adapters (kernel bypass) for
+fast path operations.
+
+%files -n %{libmlx4}
+%{_libdir}/libmlx4.so.%{mlx4major}*
+
+#--------------------------------------------------------------------------
+%package -n	%{libmlx5}
+Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
+Group:		System/Libraries
+
+%description -n %{libmlx5}
+libibverbs is a library that allows userspace processes to use RDMA
+"verbs" as described in the InfiniBand Architecture Specification and
+the RDMA Protocol Verbs Specification.  This includes direct hardware
+access from userspace to InfiniBand/iWARP adapters (kernel bypass) for
+fast path operations.
+
+%files -n %{libmlx5}
+%{_libdir}/libmlx5.so.%{mlx5major}*
+
+#--------------------------------------------------------------------------
 %package -n ibacm
-Summary: InfiniBand Communication Manager Assistant
-Requires: %{name} = %{EVRD}
+Summary:	InfiniBand Communication Manager Assistant
+Group:		System/Servers
+Requires:	%{name} = %{EVRD}
 
 %description -n ibacm
 The ibacm daemon helps reduce the load of managing path record lookups on
@@ -367,21 +436,22 @@ library knows how to talk directly to the ibacm daemon to retrieve data.
 %config(noreplace) %{_sysconfdir}/rdma/ibacm_opts.cfg
 %{_bindir}/ib_acme
 %{_sbindir}/ibacm
+%{_mandir}/man8/ibacm.*
 %{_mandir}/man1/ib_acme.*
+%{_mandir}/man7/ibacm.*
 %{_mandir}/man7/ibacm_prov.*
-%{_mandir}/man7/ibacm*
-%{_mandir}/man8/ibacm*
 %{_unitdir}/ibacm.service
 %{_unitdir}/ibacm.socket
 %dir %{_libdir}/ibacm
 %{_libdir}/ibacm/*
 %doc %{_docdir}/%{name}-%{version}/ibacm.md
 
-#===================================================================
+#--------------------------------------------------------------------------
 
 %package -n iwpmd
-Summary: iWarp Port Mapper userspace daemon
-Requires: %{name} = %{EVRD}
+Summary:	iWarp Port Mapper userspace daemon
+Group:		System/Servers
+Requires:	%{name} = %{EVRD}
 
 %description -n iwpmd
 iwpmd provides a userspace service for iWarp drivers to claim
@@ -396,10 +466,11 @@ tcp ports through the standard socket interface.
 %{_mandir}/man8/iwpmd.*
 %{_mandir}/man5/iwpmd.*
 
-#===================================================================
+#--------------------------------------------------------------------------
+
 %package -n %{libibumad}
-Summary: OpenFabrics Alliance InfiniBand umad (userspace management datagram) library
-Requires: %{name} = %{EVRD}
+Summary:	OpenFabrics Alliance InfiniBand umad (userspace management datagram) library
+Group:		System/Libraries
 
 %description -n %{libibumad}
 libibumad provides the userspace management datagram (umad) library
@@ -409,10 +480,11 @@ are used by the IB diagnostic and management tools, including OpenSM.
 %files -n %{libibumad}
 %{_libdir}/libibumad*.so.%{ibumadmajor}*
 
-#===================================================================
+#--------------------------------------------------------------------------
+
 %package -n %{libibnetdisc}
-Summary: Userspace RDMA Connection Manager
-Requires: %{name} = %{EVRD}
+Summary:	Userspace RDMA Connection Manager
+Group:		System/Libraries
 
 %description -n %{libibnetdisc}
 librdmacm provides a userspace RDMA Communication Management API.
@@ -420,26 +492,23 @@ librdmacm provides a userspace RDMA Communication Management API.
 %files -n %{libibnetdisc}
 %{_libdir}/libibnetdisc*.so.%{ibnetdiscmajor}*
 
-#===================================================================
+#--------------------------------------------------------------------------
+
 %package -n %{librdmacm}
-Summary: Userspace RDMA Connection Manager
-Requires: %{name} = %{EVRD}
+Summary:	Userspace RDMA Connection Manager
+Group:		System/Libraries
 
 %description -n %{librdmacm}
 librdmacm provides a userspace RDMA Communication Management API.
 
 %files -n %{librdmacm}
 %{_libdir}/librdmacm*.so.%{rdmacmmajor}*
-%dir %{_libdir}/rsocket
-%{_libdir}/rsocket/*.so*
-%doc %{_docdir}/%{name}-%{version}/librdmacm.md
-%{_mandir}/man7/rsocket.*
 
-#===================================================================
+#--------------------------------------------------------------------------
 
 %package -n librdmacm-utils
-Summary: Examples for the librdmacm library
-Requires:	%{librdmacm}
+Summary:	Examples for the librdmacm library
+Group:		System/Servers
 
 %description -n librdmacm-utils
 Example test programs for the librdmacm library.
@@ -472,14 +541,29 @@ Example test programs for the librdmacm library.
 %{_mandir}/man1/udaddy.*
 %{_mandir}/man1/udpong.*
 
-#===================================================================
+#--------------------------------------------------------------------------
+
+%package -n librdmacm-plugins
+Summary:	Userspace RDMA Connection Manager
+Group:		System/Libraries
+
+%description -n librdmacm-plugins
+librdmacm provides a userspace RDMA Communication Management API.
+
+%files -n librdmacm-plugins
+%dir %{_libdir}/rsocket
+%{_libdir}/rsocket/*.so*
+%{_mandir}/man7/rsocket.*
+
+#--------------------------------------------------------------------------
 
 %package -n srp_daemon
-Summary: Tools for using the InfiniBand SRP protocol devices
-Obsoletes: srptools <= 1.0.3
-Provides: srptools = %{EVRD}
-Obsoletes: openib-srptools <= 0.0.6
-Requires: %{name} = %{EVRD}
+Summary:	Tools for using the InfiniBand SRP protocol devices
+Group:		System/Servers
+Obsoletes:	srptools <= 1.0.3
+Provides:	srptools = %{EVRD}
+Obsoletes:	openib-srptools <= 0.0.6
+Requires:	%{name} = %{EVRD}
 
 %description -n srp_daemon
 In conjunction with the kernel ib_srp driver, srp_daemon allows you to
@@ -501,14 +585,15 @@ discover and use SCSI devices via the SCSI RDMA Protocol over InfiniBand.
 %{_mandir}/man5/srp_daemon_port@.service.5*
 %doc %{_docdir}/%{name}-%{version}/ibsrpdm.md
 
-#===================================================================
+#--------------------------------------------------------------------------
 %package -n python-pyverbs
-Summary: Python3 API over IB verbs
-Provides: python3-verbs = %{EVRD}
+Summary:	Python3 API over IB verbs
+Group:		Development/Python
+Provides:	python-verbs = %{EVRD}
 
-BuildRequires: pkgconfig(python)
-BuildRequires: python-cython
-BuildRequires: python-docutils
+BuildRequires:	pkgconfig(python)
+BuildRequires:	python-cython
+BuildRequires:	python-docutils
 
 %description -n python-pyverbs
 Pyverbs is a Cython-based Python API over libibverbs, providing an
@@ -517,7 +602,9 @@ easy, object-oriented access to IB verbs.
 %files -n python-pyverbs
 %{python_sitearch}/pyverbs
 %{_docdir}/%{name}-%{version}/tests/*.py
-#===================================================================
+
+#--------------------------------------------------------------------------
+
 %prep
 %autosetup -p1
 
@@ -528,7 +615,7 @@ easy, object-oriented access to IB verbs.
 
 # Pass all of the rpm paths directly to GNUInstallDirs and our other defines.
 %cmake %{CMAKE_FLAGS} \
-	-DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_BINDIR:PATH=%{_bindir} \
         -DCMAKE_INSTALL_SBINDIR:PATH=%{_sbindir} \
         -DCMAKE_INSTALL_LIBDIR:PATH=%{_libdir} \
@@ -565,15 +652,10 @@ mkdir -p %{buildroot}%{_udevrulesdir}
 mkdir -p %{buildroot}%{dracutlibdir}/modules.d/05rdma
 mkdir -p %{buildroot}%{sysmodprobedir}
 install -D -m0644 redhat/rdma.conf %{buildroot}/%{_sysconfdir}/rdma/rdma.conf
-install -D -m0644 redhat/rdma.sriov-vfs %{buildroot}/%{_sysconfdir}/rdma/sriov-vfs
 install -D -m0644 redhat/rdma.mlx4.conf %{buildroot}/%{_sysconfdir}/rdma/mlx4.conf
 install -D -m0644 redhat/rdma.mlx4.sys.modprobe %{buildroot}%{sysmodprobedir}/libmlx4.conf
 install -D -m0755 redhat/rdma.mlx4-setup.sh %{buildroot}%{_libexecdir}/mlx4-setup.sh
-install -D -m0644 redhat/rdma.service %{buildroot}%{_unitdir}/rdma.service
 install -D -m0755 redhat/rdma.modules-setup.sh %{buildroot}%{dracutlibdir}/modules.d/05rdma/module-setup.sh
-install -D -m0644 redhat/rdma.udev-rules %{buildroot}%{_udevrulesdir}/98-rdma.rules
-install -D -m0755 redhat/rdma.kernel-init %{buildroot}%{_libexecdir}/rdma-init-kernel
-install -D -m0755 redhat/rdma.sriov-init %{buildroot}%{_libexecdir}/rdma-set-sriov-vf
 
 # ibacm
 pushd build
@@ -587,9 +669,9 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 
 %post -n rdma-core
 # we ship udev rules, so trigger an update.
-/sbin/udevadm trigger --subsystem-match=infiniband --action=change || true
-/sbin/udevadm trigger --subsystem-match=net --action=change || true
-/sbin/udevadm trigger --subsystem-match=infiniband_mad --action=change || true
+udevadm trigger --subsystem-match=infiniband --action=change || true
+udevadm trigger --subsystem-match=net --action=change || true
+udevadm trigger --subsystem-match=infiniband_mad --action=change || true
 
 %post -n ibacm
 %systemd_post ibacm.service
@@ -611,4 +693,3 @@ rm -f %{buildroot}/%{_sbindir}/srp_daemon.sh
 %systemd_preun iwpmd.service
 %postun -n iwpmd
 %systemd_postun_with_restart iwpmd.service
-
