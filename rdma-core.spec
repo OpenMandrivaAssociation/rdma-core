@@ -25,7 +25,7 @@
 %bcond_with docs
 
 Name:		rdma-core
-Version:	32.0
+Version:	38.1
 Release:	1
 Summary:	RDMA core userspace libraries and daemons
 Group:		System/Servers
@@ -117,6 +117,11 @@ Provides:	rdmacm-devel = %{EVRD}
 Requires:	infiniband-diags = %{EVRD}
 Provides:	infiniband-diags-devel = %{EVRD}
 Provides:	%{_lib}ibmad-devel = %{EVRD}
+Provides:	libibverbs-devel = %{EVRD}
+Provides:	librdmacm-devel = %{EVRD}
+%rename libibumad-devel
+%rename %{mklibname -d ibverbs}
+%rename %{mklibname -d rdmacm}
 
 %description -n	%{devname}
 RDMA core development libraries and headers.
