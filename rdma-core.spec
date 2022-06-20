@@ -11,21 +11,30 @@
 %global dracutlibdir %{_prefix}/lib/dracut
 %global sysmodprobedir %{_prefix}/lib/modprobe.d
 
-%define libibverbs %mklibname ibverbs %{ibverbsmajor}
-%define libibumad %mklibname ibumad %{ibumadmajor}
-%define libibmad %mklibname ibumad %{ibmadmajor}
-%define librdmacm %mklibname rdmacm %{rdmacmmajor}
-%define libibnetdisc %mklibname ibnetdisc %{ibnetdiscmajor}
-%define libefa %mklibname efa %{efamajor}
-%define libmlx4 %mklibname mlx4 %{efamajor}
-%define libmlx5 %mklibname mlx5 %{efamajor}
+%define libibverbs %mklibname ibverbs
+%define libibumad %mklibname ibumad
+%define libibmad %mklibname ibmad
+%define librdmacm %mklibname rdmacm
+%define libibnetdisc %mklibname ibnetdisc
+%define libefa %mklibname efa
+%define libmlx4 %mklibname mlx4
+%define libmlx5 %mklibname mlx5
+%define oldlibibverbs %mklibname ibverbs %{ibverbsmajor}
+%define oldlibibumad %mklibname ibumad %{ibumadmajor}
+# Not a typo -- the typo was in the old package
+%define oldlibibmad %mklibname ibumad %{ibmadmajor}
+%define oldlibrdmacm %mklibname rdmacm %{rdmacmmajor}
+%define oldlibibnetdisc %mklibname ibnetdisc %{ibnetdiscmajor}
+%define oldlibefa %mklibname efa %{efamajor}
+%define oldlibmlx4 %mklibname mlx4 %{efamajor}
+%define oldlibmlx5 %mklibname mlx5 %{efamajor}
 
 %define devname %mklibname %{name} -d
 
 %bcond_with docs
 
 Name:		rdma-core
-Version:	38.1
+Version:	41.0
 Release:	1
 Summary:	RDMA core userspace libraries and daemons
 Group:		System/Servers
@@ -239,6 +248,7 @@ programs. These include MAD, SA, SMP, and other basic IB functions.
 %package -n %{libibmad}
 Summary: OpenFabrics Alliance InfiniBand mad (userspace management datagram) library
 Group:		System/Libraries
+%rename %{oldlibibmad}
 
 %description -n %{libibmad}
 libibmad provides the userspace management datagram (umad) library
@@ -299,6 +309,7 @@ compatibility reasons.
 %package -n	%{libibverbs}
 Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
 Group:		System/Libraries
+%rename %{oldlibibverbs}
 
 %description -n %{libibverbs}
 libibverbs is a library that allows userspace processes to use RDMA
@@ -378,6 +389,7 @@ Device-specific plug-in ibverbs userspace drivers are included:
 %package -n	%{libefa}
 Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
 Group:		System/Libraries
+%rename %{oldlibefa}
 
 %description -n %{libefa}
 libibverbs is a library that allows userspace processes to use RDMA
@@ -395,6 +407,7 @@ fast path operations.
 %package -n	%{libmlx4}
 Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
 Group:		System/Libraries
+%rename %{oldlibmlx4}
 
 %description -n %{libmlx4}
 libibverbs is a library that allows userspace processes to use RDMA
@@ -410,6 +423,7 @@ fast path operations.
 %package -n	%{libmlx5}
 Summary:	A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware
 Group:		System/Libraries
+%rename %{oldlibmlx5}
 
 %description -n %{libmlx5}
 libibverbs is a library that allows userspace processes to use RDMA
@@ -476,6 +490,7 @@ tcp ports through the standard socket interface.
 %package -n %{libibumad}
 Summary:	OpenFabrics Alliance InfiniBand umad (userspace management datagram) library
 Group:		System/Libraries
+%rename %{oldlibibumad}
 
 %description -n %{libibumad}
 libibumad provides the userspace management datagram (umad) library
@@ -490,6 +505,7 @@ are used by the IB diagnostic and management tools, including OpenSM.
 %package -n %{libibnetdisc}
 Summary:	Userspace RDMA Connection Manager
 Group:		System/Libraries
+%rename %{oldlibibnetdisc}
 
 %description -n %{libibnetdisc}
 librdmacm provides a userspace RDMA Communication Management API.
@@ -502,6 +518,7 @@ librdmacm provides a userspace RDMA Communication Management API.
 %package -n %{librdmacm}
 Summary:	Userspace RDMA Connection Manager
 Group:		System/Libraries
+%rename %{oldlibrdmacm}
 
 %description -n %{librdmacm}
 librdmacm provides a userspace RDMA Communication Management API.
